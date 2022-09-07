@@ -1,0 +1,18 @@
+[project]
+name = 'numpy-iteration-examples'
+version = '0.0.1'
+description = 'Examples on how to use the Numpy C Iter API'
+readme = 'README.md'
+license = "BSD-3-Clause"
+authors = [
+  { name = 'Will Ayd', email = 'william.ayd@icloud.com' },
+]
+classifiers = [
+  'Development Status :: 4 - Beta',
+  'Programming Language :: Python',
+]
+
+requires-python = '>=3.7'
+dependencies = [
+  'numpy',
+]
