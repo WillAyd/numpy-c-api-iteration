@@ -41,15 +41,17 @@ static PyObject *simple_loop(PyObject *self, PyObject *args) {
      *   casting NPY_NO_CASTING
      *     - No casting is required for this operation.
      */
-    iter = NpyIter_New(array, NPY_ITER_READONLY|
-                             NPY_ITER_EXTERNAL_LOOP|
-                             NPY_ITER_REFS_OK,
-                        NPY_KEEPORDER, NPY_NO_CASTING,
+    iter = NpyIter_New(array,
+                       NPY_ITER_READONLY|
+                       NPY_ITER_MULTI_INDEX |
+                       NPY_ITER_REFS_OK,
+                       NPY_KEEPORDER, NPY_NO_CASTING,
                         NULL);
     if (iter == NULL) {
         Py_RETURN_NONE;
     }
 
+    printf("Number of dimensions to iterate is %d\n", NpyIter_GetNDim(iter));
     /*
      * The iternext function gets stored in a local variable
      * so it can be called repeatedly in an efficient manner.
