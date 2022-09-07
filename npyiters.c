@@ -1,14 +1,21 @@
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-static PyObject *simple_loop(PyObject *Py_UNUSED(self), PyObject *args) {
+static PyObject *simple_loop(PyObject *self, PyObject *args) {
     // Taken from numpy documentation with slight modifications
     // https://numpy.org/doc/stable/reference/c-api/iterator.html
+    PyObject *obj;
     PyArrayObject *array;
-    int ok = PyArg_ParseTuple(args, "O", &array);
+    int ok = PyArg_ParseTuple(args, "O", &obj);
     if (!ok)
         return NULL;
-    
+
+    if (!PyArray_Check(obj))
+        Py_RETURN_NONE;
+    else
+        array = (PyArrayObject *)obj;
+
     NpyIter *iter;
     NpyIter_IterNextFunc *iternext;
     char** dataptr;
@@ -97,5 +104,6 @@ static struct PyModuleDef npyitersmodule = {
 
 PyMODINIT_FUNC
 PyInit_npyiters(void) {
+    import_array();
     return PyModule_Create(&npyitersmodule);
 }
