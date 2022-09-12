@@ -43,47 +43,40 @@ static PyObject *simple_loop(PyObject *self, PyObject *args) {
      */
     iter = NpyIter_New(array,
                        NPY_ITER_READONLY|
-                       NPY_ITER_MULTI_INDEX |
+                       NPY_ITER_MULTI_INDEX|
                        NPY_ITER_REFS_OK,
                        NPY_KEEPORDER, NPY_NO_CASTING,
                         NULL);
     if (iter == NULL) {
-        Py_RETURN_NONE;
+        return NULL;
     }
 
-    printf("Number of dimensions to iterate is %d\n", NpyIter_GetNDim(iter));
-    /*
-     * The iternext function gets stored in a local variable
-     * so it can be called repeatedly in an efficient manner.
-     */
-    iternext = NpyIter_GetIterNext(iter, NULL);
-    if (iternext == NULL) {
+    if (NpyIter_GetIterSize(iter) != 0) {
+      /*
+       * The iternext function gets stored in a local variable
+       * so it can be called repeatedly in an efficient manner.
+       */
+      npy_intp *multi_index;
+      iternext = NpyIter_GetIterNext(iter, NULL);
+      if (iternext == NULL) {
         NpyIter_Deallocate(iter);
-        Py_RETURN_NONE;
+        return NULL;
+      }
+
+      NpyIter_GetMultiIndexFunc *get_multi_index = NpyIter_GetGetMultiIndex(iter, NULL);
+      if (get_multi_index == NULL) {
+        NpyIter_Deallocate(iter);
+        return NULL;
+      }
+      
+      /* The location of the data pointer which the iterator may update */
+      dataptr = NpyIter_GetDataPtrArray(iter);
+      do {
+        printf("element is %d\t", **dataptr);
+        get_multi_index(iter, multi_index);
+        printf("multi_index is [%ld, %ld]\n", multi_index[0], multi_index[1]);
+      } while(iternext(iter));
     }
-    /* The location of the data pointer which the iterator may update */
-    dataptr = NpyIter_GetDataPtrArray(iter);
-    /* The location of the stride which the iterator may update */
-    strideptr = NpyIter_GetInnerStrideArray(iter);
-    /* The location of the inner loop size which the iterator may update */
-    innersizeptr = NpyIter_GetInnerLoopSizePtr(iter);
-
-    do {
-        printf("Starting inner loop\n");        
-        /* Get the inner loop data/stride/count values */
-        char* data = *dataptr;
-        npy_intp stride = *strideptr;
-        npy_intp count = *innersizeptr;
-
-        /* This is a typical inner loop for NPY_ITER_EXTERNAL_LOOP */
-        while (count--) {
-            printf("Iterating inner elements\n");
-            data += stride;
-        }
-        printf("Leaving inner loop\n");
-
-        /* Increment the iterator to the next inner loop */
-    } while(iternext(iter));
 
     NpyIter_Deallocate(iter);
 
