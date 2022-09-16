@@ -13,5 +13,5 @@ make
 ## Running the Example
 
 ```sh
-python -c "import npyiters; import numpy as np; npyiters.print_2d(np.ones((5, 5)))"
+python -c "import npyiters; import numpy as np; npyiters.print_2d(np.ones((3, 2)))"
 ```

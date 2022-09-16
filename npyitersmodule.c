@@ -5,7 +5,8 @@
 int PrintMultiIndex(PyArrayObject *arr) {
     NpyIter *iter;
     NpyIter_IterNextFunc *iternext;
-    char **dataptr;
+    npy_intp *multi_index;
+
     iter = NpyIter_New(
         arr, NPY_ITER_READONLY | NPY_ITER_MULTI_INDEX | NPY_ITER_REFS_OK,
         NPY_KEEPORDER, NPY_NO_CASTING, NULL);
@@ -18,7 +19,6 @@ int PrintMultiIndex(PyArrayObject *arr) {
         return -1;
     }
     if (NpyIter_GetIterSize(iter) != 0) {
-        npy_intp *multi_index;
         iternext = NpyIter_GetIterNext(iter, NULL);
         if (iternext == NULL) {
             NpyIter_Deallocate(iter);
@@ -30,7 +30,8 @@ int PrintMultiIndex(PyArrayObject *arr) {
             NpyIter_Deallocate(iter);
             return -1;
         }
-        dataptr = NpyIter_GetDataPtrArray(iter);
+
+        multi_index = (npy_intp *)PyArray_DATA(arr);
         do {
             get_multi_index(iter, multi_index);
             printf("multi_index is [%" NPY_INTP_FMT ", %" NPY_INTP_FMT "]\n",
@@ -43,32 +44,30 @@ int PrintMultiIndex(PyArrayObject *arr) {
     return 0;
 }
 
-PyObject *print_2d(PyObject *self, PyObject *args) {
+PyObject *print_2d(PyObject *Py_UNUSED(self), PyObject *args) {
     PyObject *obj;
-    PyArrayObject *array;
-    int ok = PyArg_ParseTuple(args, "O", &obj);
+    int ok = PyArg_UnpackTuple(args, "ref", 1, 1, &obj);
     if (!ok)
         return NULL;
 
     if (!PyArray_Check(obj)) {
-      PyErr_SetString(PyExc_TypeError, "Expected numpy array");
-      return NULL;
-    } else {
-      int ret = PrintMultiIndex((PyArrayObject *)obj);
-      if (ret != 0) {
-        PyErr_SetString(PyExc_RuntimeError, "Something unexpected happended");
+        PyErr_SetString(PyExc_TypeError, "Expected numpy array");
         return NULL;
-      }
+    } else {
+        int ret = PrintMultiIndex((PyArrayObject *)obj);
+        if (ret != 0) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "Something unexpected happended");
+            return NULL;
+        }
     }
 
     Py_RETURN_NONE;
-};
-    
+}
 
-static PyMethodDef methods[] = {
-    {"print_2d", print_2d, METH_VARARGS, "Prints 2D Multi Index position"},
-    {NULL, NULL, 0, NULL}
-};
+static PyMethodDef methods[] = {{"print_2d", print_2d, METH_VARARGS,
+                                 PyDoc_STR("Prints 2D Multi Index position")},
+                                {NULL, NULL, 0, NULL}};
 
 static PyModuleDef npyitersmodule = {
     .m_base = PyModuleDef_HEAD_INIT,
@@ -76,9 +75,7 @@ static PyModuleDef npyitersmodule = {
     .m_methods = methods,
 };
 
-
-PyMODINIT_FUNC
-PyInit_npyiters(void) {
+PyMODINIT_FUNC PyInit_npyiters(void) {
     import_array();
     return PyModuleDef_Init(&npyitersmodule);
 }
