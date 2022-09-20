@@ -5,7 +5,7 @@
 int PrintMultiIndex(PyArrayObject *arr) {
     NpyIter *iter;
     NpyIter_IterNextFunc *iternext;
-    npy_intp *multi_index;
+    npy_intp multi_index[2];
 
     iter = NpyIter_New(
         arr, NPY_ITER_READONLY | NPY_ITER_MULTI_INDEX | NPY_ITER_REFS_OK,
@@ -31,7 +31,6 @@ int PrintMultiIndex(PyArrayObject *arr) {
             return -1;
         }
 
-        multi_index = (npy_intp *)PyArray_DATA(arr);
         do {
             get_multi_index(iter, multi_index);
             printf("multi_index is [%" NPY_INTP_FMT ", %" NPY_INTP_FMT "]\n",
